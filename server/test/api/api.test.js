@@ -31,3 +31,33 @@ describe('Version', function () {
         });
     });
 });
+describe('API', function () {
+    describe('should get the address', function () {
+        it('get address', async function () {
+            let api = new API();
+            let res = await api.getAddress("addr1qxqs59lphg8g6qndelq8xwqn60ag3aeyfcp33c2kdp46a09re5df3pzwwmyq946axfcejy5n4x0y99wqpgtp2gd0k09qsgy6pz");
+            chai.expect(res.data).to.be.a("object");
+            chai.expect(res.status).to.equal(200);
+        });
+        it('get address utxos', async function () {
+            let api = new API();
+            let res = await api.getAddressUTXOs("addr1qxqs59lphg8g6qndelq8xwqn60ag3aeyfcp33c2kdp46a09re5df3pzwwmyq946axfcejy5n4x0y99wqpgtp2gd0k09qsgy6pz");
+            chai.expect(res.data).to.be.a("array");
+            chai.expect(res.status).to.equal(200);
+        });
+        it('get transaction metadata labels', async function () {
+            this.timeout(20000);
+            let api = new API();
+            let res = await api.getTransactionMetadataLabels(`?count=100&page=1&order=desc`);
+            chai.expect(res.data).to.be.a("array");
+            chai.expect(res.status).to.equal(200);
+        });
+        it('get transaction metadata json by label', async function () {
+            this.timeout(30000);
+            let api = new API();
+            let res = await api.getTransactionMetadataContentJSON("1", `?count=100&page=200&order=asc`);
+            chai.expect(res.data).to.be.a("array");
+            chai.expect(res.status).to.equal(200);
+        });
+    });
+});
