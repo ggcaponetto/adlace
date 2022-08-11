@@ -18,7 +18,7 @@ describe('Environment', function () {
     describe('should import .env file', function () {
         it('should read the mainnet blockfrost project id', function () {
             let bf = process.env.BLOCKFROST_MAINNET;
-            chai.expect(v).to.be.a("string");
+            chai.expect(bf).to.be.a("string");
         });
     });
 });

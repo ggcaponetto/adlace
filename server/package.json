@@ -5,17 +5,18 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "mocha 'test/**/*.test.js'"
+    "test": "mocha --require @babel/register 'test/**/*.test.js'"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/register": "^7.18.9",
     "chai": "^4.3.6",
+    "dotenv": "^16.0.1",
     "mocha": "^10.0.0",
-    "winston": "^3.8.1",
-    "dotenv": "^16.0.1"
-  },
-  "dependencies": {
-
+    "winston": "^3.8.1"
   }
 }
