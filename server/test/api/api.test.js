@@ -55,7 +55,10 @@ describe('API', function () {
         it('get transaction metadata json by label', async function () {
             this.timeout(30000);
             let api = new API();
-            let res = await api.getTransactionMetadataContentJSON("1", `?count=100&page=200&order=asc`);
+            /*
+            * gets the latest tx metadata with label 55555
+            * */
+            let res = await api.getTransactionMetadataContentJSON("55555", `?count=100&page=1&order=desc`);
             chai.expect(res.data).to.be.a("array");
             chai.expect(res.status).to.equal(200);
         });
