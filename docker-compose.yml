@@ -20,3 +20,10 @@ services:
       - 443:443
       - 80:80 #optional
     restart: unless-stopped
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
