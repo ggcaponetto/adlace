@@ -15,7 +15,7 @@ services:
       - CERTPROVIDER=zerossl
       - EMAIL=ggcaponetto@gmail.com
     volumes:
-      - ./swag:/config
+      - ./swag/config:/config
     ports:
       - 443:443
       - 80:80 #optional
