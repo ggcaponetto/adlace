@@ -26,8 +26,8 @@ services:
     volumes:
       - ./swag/config:/config
     ports:
-      - 443:443
-      - 80:80 #optional
+      - "443:443"
+      - "80:80" #optional
     restart: unless-stopped
   web:
     image: nginx:latest
@@ -35,8 +35,8 @@ services:
     networks:
       - adlace
     ports:
-      - 8888:88
+      - "8888:7777"
     environment:
-      - NGINX_PORT=8888
+      - NGINX_PORT=7777
 networks:
   adlace:
