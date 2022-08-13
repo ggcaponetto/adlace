@@ -39,6 +39,7 @@ services:
     ports:
       - "8888:8888"
     environment:
+      - PORT=8888
       - NGINX_PORT=8888
 networks:
   adlace:
