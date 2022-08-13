@@ -35,7 +35,6 @@ services:
     ports:
       - "8080:80"
     environment:
-      - NGINX_HOST=141x.io
       - NGINX_PORT=80
 networks:
   default:
