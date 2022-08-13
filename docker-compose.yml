@@ -36,8 +36,8 @@ services:
       - adlace
     volumes:
       - ./templates:/etc/nginx/templates
-      - 8080:8080
+      - 80:80
     environment:
-      - NGINX_PORT=8080
+      - NGINX_PORT=80
 networks:
   adlace:
