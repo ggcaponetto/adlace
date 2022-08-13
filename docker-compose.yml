@@ -30,15 +30,11 @@ services:
       - "80:80" #optional
     restart: unless-stopped
   web:
-    image: nginx:latest
+    image: crccheck/hello-world
     container_name: web
     networks:
       - adlace
     ports:
-      - "7777:7777"
-    expose:
-      - "7777"
-    environment:
-      - NGINX_PORT=7777
+      - "7777:8000"
 networks:
   adlace:
