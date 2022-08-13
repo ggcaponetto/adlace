@@ -5,7 +5,6 @@ services:
     container_name: swag
     networks:
       - default
-      - adlace
     cap_add:
       - NET_ADMIN
     environment:
@@ -35,7 +34,6 @@ services:
     container_name: web
     networks:
       - default
-      - adlace
     volumes:
       - ./templates:/etc/nginx/templates
     ports:
