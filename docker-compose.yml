@@ -12,8 +12,15 @@ services:
       - URL=141x.io
       - SUBDOMAINS=cdn,api
       - VALIDATION=http
-      - CERTPROVIDER=zerossl
+      # - CERTPROVIDER=zerossl
+      - DNSPLUGIN=cloudflare #optional
+      - PROPAGATION= #optional
+      - DUCKDNSTOKEN= #optional
       - EMAIL=ggcaponetto@gmail.com
+      - ONLY_SUBDOMAINS=false #optional
+      - EXTRA_DOMAINS= #optional
+      - STAGING=false #optional
+      - MAXMINDDB_LICENSE_KEY= #optional
     volumes:
       - ./swag/config:/config
     ports:
