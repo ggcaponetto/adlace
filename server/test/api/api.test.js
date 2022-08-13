@@ -2,7 +2,7 @@ import assert from 'assert';
 import chai from "chai";
 import winston from "winston";
 import * as dotenv from 'dotenv'
-import API from "../../src/api/api.js"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import API from "../../src/blockfrost/api.js"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 dotenv.config()
 
 // configure the logger
