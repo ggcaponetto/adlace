@@ -10,7 +10,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=141x.io
-      - SUBDOMAINS=www,api
+      - SUBDOMAINS=cdn,api
       - VALIDATION=http
       - CERTPROVIDER=zerossl
       - EMAIL=ggcaponetto@gmail.com
