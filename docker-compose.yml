@@ -27,11 +27,12 @@ services:
       - 443:443
       - 80:80 #optional
     restart: unless-stopped
-  webserver:
+  web:
     image: nginx
-    container_name: webserver
-    restart: unless-stopped
-    environment:
-      - NGINX_PORT=81
+    volumes:
+      - ./templates:/etc/nginx/templates
     ports:
-      - "5000:81"
+      - "8080:80"
+    environment:
+      - NGINX_HOST=foobar.com
+      - NGINX_PORT=80
