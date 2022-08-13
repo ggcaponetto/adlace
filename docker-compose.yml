@@ -30,16 +30,11 @@ services:
       - 80:80 #optional
     restart: unless-stopped
   web:
-    image: nginx
+    image: yeasy/simple-web:latest
     container_name: web
     networks:
       - adlace
-    volumes:
-      - ./templates:/etc/nginx/templates
     ports:
-      - "8888:8888"
-    environment:
-      - PORT=8888
-      - NGINX_PORT=8888
+      - "8888:80"
 networks:
   adlace:
