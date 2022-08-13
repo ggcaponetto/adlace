@@ -35,8 +35,6 @@ services:
     networks:
       - adlace
     ports:
-      - "8888:7777"
-    environment:
-      - NGINX_PORT=7777
+      - "7777:80"
 networks:
   adlace:
