@@ -3,8 +3,6 @@ services:
   swag:
     image: lscr.io/linuxserver/swag
     container_name: swag
-    networks:
-      - adalace
     cap_add:
       - NET_ADMIN
     environment:
@@ -32,8 +30,6 @@ services:
   web:
     image: nginx
     container_name: web
-    networks:
-      - adalace
     volumes:
       - ./templates:/etc/nginx/templates
     ports:
@@ -42,4 +38,5 @@ services:
       - NGINX_HOST=141x.io
       - NGINX_PORT=80
 networks:
-  adalace:
+  default:
+    name: adlace
