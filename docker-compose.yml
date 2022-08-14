@@ -42,3 +42,12 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+  web:
+    image: nginx
+    volumes:
+      - ./web/templates:/etc/nginx/templates
+    ports:
+      - "8888:80"
+    environment:
+      - NGINX_HOST=foobar.com
+      - NGINX_PORT=80
