@@ -27,9 +27,9 @@ services:
       - "443:443"
       - "80:80" #optional
     restart: unless-stopped
-  141x-game-authorizer:
+  adlace-game-authorizer:
     image: "ggcaponetto/141x-game-authorizer:latest"
-    container_name: 141x-game-authorizer
+    container_name: adlace-game-authorizer
     environment:
       - PORT=5000
       - REACT_APP_BLOCKFROST_API_KEY_MAINNET=mainnetBZlO5gTmEra3HQClx0tavfhTs6SffTiI
@@ -42,6 +42,3 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-networks:
-  default:
-    name: adlace
