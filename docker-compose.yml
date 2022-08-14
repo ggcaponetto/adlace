@@ -44,6 +44,7 @@ services:
         condition: on-failure
   web:
     image: nginx
+    container_name: adlace-web
     volumes:
       - ./web/templates:/etc/nginx/templates
     ports:
