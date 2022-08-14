@@ -12,7 +12,7 @@ services:
       - URL=141x.io
       - SUBDOMAINS=cdn,api
       - VALIDATION=http
-      # - CERTPROVIDER=zerossl
+      - CERTPROVIDER=zerossl
       - DNSPLUGIN=cloudflare #optional
       - PROPAGATION= #optional
       - DUCKDNSTOKEN= #optional
