@@ -43,14 +43,14 @@ services:
       restart_policy:
         condition: on-failure
   web:
-    image: nginx
+    image: dev3l/docker-node-js-webpack
     container_name: adlace-web
     volumes:
       - ./web/templates:/etc/nginx/templates
     ports:
       - "8888:8888"
     environment:
-      - NGINX_PORT=8888
+      - PORT=8888
     deploy:
       restart_policy:
         condition: on-failure
