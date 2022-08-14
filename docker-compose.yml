@@ -27,11 +27,21 @@ services:
       - "443:443"
       - "80:80" #optional
     restart: unless-stopped
-  web:
-    image: nginx
-    container_name: web
+  141x-game-authorizer:
+    image: "ggcaponetto/141x-game-authorizer:latest"
+    container_name: 141x-game-authorizer
+    environment:
+      - PORT=5000
+      - REACT_APP_BLOCKFROST_API_KEY_MAINNET=mainnetBZlO5gTmEra3HQClx0tavfhTs6SffTiI
+      - REACT_APP_BLOCKFROST_API_KEY_TESTNET=testnetiMWOam5dRqf8xr0q0ytNhYCRRDInJRWw
+      - REACT_APP_SERVER=https://game-server.141x.io
+      - REACT_APP_APP_ID=the-meta
+      - REACT_APP_NETWORK=mainnet
     ports:
-      - "8888:8888"
+      - "5000:5000"
+    deploy:
+      restart_policy:
+        condition: on-failure
 networks:
   default:
     name: adlace
