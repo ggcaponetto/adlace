@@ -37,7 +37,7 @@ services:
     ports:
       - "8080:8081"
     environment:
-      - NGINX_HOST=foobar.com
+      - NGINX_HOST=cdn.141x.io
       - NGINX_PORT=8081
 networks:
   adlace:
