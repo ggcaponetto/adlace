@@ -14,12 +14,21 @@ const mochaLogger = winston.createLogger({
     ]
 });
 
-describe('Environment', function () {
+describe('Server', function () {
     describe('run the server', function () {
         it('run the server on a specific port', async function () {
             let api = new API({port: 3333});
             let server = await api.runServer();
             await api.closeServer(server);
+        });
+        it('get the json metadata by address and label', async function () {
+            let api = new API({port: 3333});
+            await api.getMetadataByAddress(
+                "addr1qx5hcvf9fhurwcmpp49ktppgy2eyeydd56mr05caa6xmfa7j96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsuu8g2m",
+                "55555",
+                `?count=100&page=1&order=desc`
+            )
+            chai.expect(true).to.be.equal(false);
         });
     });
 });

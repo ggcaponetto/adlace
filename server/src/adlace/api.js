@@ -4,6 +4,7 @@ import {fileURLToPath} from 'url';
 import winston from "winston";
 import axios from "axios";
 import express from "express"
+import BlockfrostAPI from "./../blockfrost/api.js";
 const app = express();
 const port = process.env.PORT;
 
@@ -16,6 +17,7 @@ function API(options={
     port: port
 }){
     this.options = options;
+    this.blockfrost = new BlockfrostAPI({});
 }
 API.prototype.getVersion = function (){ return packageJson.version };
 API.prototype.runServer = async function (){
@@ -36,5 +38,10 @@ API.prototype.runServer = async function (){
 }
 API.prototype.closeServer = async function (server){
     return server.close();
+}
+
+API.prototype.getMetadataByAddress = async function(address ,label, qs){
+    let utxos = await this.blockfrost.getAddressUTXOs(address);
+    let metadataJSONByLabel = await this.blockfrost.getTransactionMetadataContentJSON(label, qs);
 }
 export default API;
