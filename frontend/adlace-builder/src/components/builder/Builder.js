@@ -20,7 +20,7 @@ function Builder() {
     }, []);
     return (
         <div className="Builder">
-            Builder: {t('Welcome to React')}
+            Builderrr: {t('Welcome to React')}
             <Button variant="contained">Hello World</Button>
         </div>
     );
