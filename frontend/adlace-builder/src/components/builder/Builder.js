@@ -3,6 +3,10 @@ import React, {Suspense, useEffect} from 'react';
 import ReactDOM from 'react-dom/client';
 import * as ll from "loglevel";
 import {useTranslation} from "react-i18next";
+
+import Button from '@mui/material/Button';
+
+
 const script = document.currentScript;
 if(process.env.NODE_ENV === "production"){
     ll.setLevel(ll.levels.WARN);
@@ -17,6 +21,7 @@ function Builder() {
     return (
         <div className="Builder">
             Builder: {t('Welcome to React')}
+            <Button variant="contained">Hello World</Button>
         </div>
     );
 }

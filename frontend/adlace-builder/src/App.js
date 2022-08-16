@@ -4,14 +4,30 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import Builder from "./components/builder/Builder";
 import Launcher from "./components/launcher/Launcher";
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 const script = document.currentScript;
+
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+    },
+});
+const lightTheme = createTheme({
+    palette: {
+        mode: 'light',
+    },
+});
 
 function App() {
   return (
-    <div className="App">
-      <Builder/>
-      <Launcher/>
-    </div>
+      <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
+          <div className="App">
+              <Builder/>
+              <Launcher/>
+          </div>
+      </ThemeProvider>
   );
 }
 
