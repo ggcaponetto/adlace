@@ -5,6 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "cross-env PORT=3001 node src/index.js",
+    "docker-build-production": "docker build --no-cache -f Dockerfile -t adlace-server:latest --build-arg build_env=production .",
+    "docker-tag-production": "docker tag adlace-server:latest ggcaponetto/adlace-server:latest",
+    "docker-push-production": "docker image push ggcaponetto/adlace-server:latest",
+    "docker-run-production": "docker stop adlace-server || true && docker rm adlace-server || true || docker run -d --name adlace-server -p 3001:3001 -d ggcaponetto/adlace-server:latest .",
+    "docker-deploy": "npm run docker-build-production && npm run docker-tag-production && npm run docker-push-production",
     "test": "mocha --require @babel/register 'test/**/*.test.js'"
   },
   "author": "",
@@ -21,6 +27,7 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "cross-env": "^7.0.3",
     "express": "^4.18.1"
   }
 }
