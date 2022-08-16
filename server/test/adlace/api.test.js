@@ -17,25 +17,44 @@ const mochaLogger = winston.createLogger({
 describe('Server', function () {
     describe('run the server', function () {
         it('run the server on a specific port', async function () {
-            let api = new Adlace({port: 3333});
+            this.timeout(5000)
+            let api = new Adlace({
+                port: 3333,
+                blockfrostOptions: {
+                    baseUrl: "https://cardano-mainnet.blockfrost.io",
+                    project_id: process.env.BLOCKFROST_MAINNET
+                }
+            });
             let server = await api.runServer();
             await api.closeServer(server);
         });
         it('get the json metadata by address and label', async function () {
-            let api = new Adlace({port: 3333});
-            await api.getMetadataByAddress(
+            let api = new Adlace({
+                port: 3333,
+                blockfrostOptions: {
+                    baseUrl: "https://cardano-mainnet.blockfrost.io",
+                    project_id: process.env.BLOCKFROST_MAINNET
+                }
+            });
+            let matches = await api.getMetadataByAddress(
                 "addr1qx5hcvf9fhurwcmpp49ktppgy2eyeydd56mr05caa6xmfa7j96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsuu8g2m",
                 "55555",
                 `?count=100&page=1&order=desc`
             )
-            chai.expect(true).to.be.equal(false);
+            chai.expect(matches.length).to.be.gt(0);
         });
     });
 });
 describe('Version', function () {
     describe('should get the api version', function () {
         it('get the version from the package.json', function () {
-            let api = new Adlace({});
+            let api = new Adlace({
+                port: 3333,
+                blockfrostOptions: {
+                    baseUrl: "https://cardano-mainnet.blockfrost.io",
+                    project_id: process.env.BLOCKFROST_MAINNET
+                }
+            });
             let v = api.getVersion();
             chai.expect(v).to.be.a("string");
         });

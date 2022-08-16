@@ -19,7 +19,14 @@ function Schema(){
     this.versions = [
         {
             version: 1,
+            receiver: "",
+            policy: {
+                name: "last-wins",
+                config: {
+                    minAmount: 1
+                }
+            }
         }
     ]
 }
-Schema.prototype.getLatest = function (){  }
+Schema.prototype.getLatest = function (){ return this.versions[this.versions.length - 1] }
