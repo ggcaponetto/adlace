@@ -28,6 +28,19 @@ describe('Server', function () {
             let server = await api.runServer();
             await api.closeServer(server);
         });
+        it('run the server on a specific port until timeout',  async function (done) {
+            let timeout = 1000 * 60 * 60
+            this.timeout(timeout)
+            let api = new Adlace({
+                port: 3333,
+                blockfrostOptions: {
+                    baseUrl: "https://cardano-mainnet.blockfrost.io",
+                    project_id: process.env.BLOCKFROST_MAINNET
+                }
+            });
+            let server = await api.runServer();
+            await new Promise((res) => setTimeout(res, timeout))
+        });
         it('get the json metadata by address and label', async function () {
             let api = new Adlace({
                 port: 3333,

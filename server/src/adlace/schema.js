@@ -30,3 +30,5 @@ function Schema(){
     ]
 }
 Schema.prototype.getLatest = function (){ return this.versions[this.versions.length - 1] }
+
+export default Schema;

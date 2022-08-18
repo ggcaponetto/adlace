@@ -6,6 +6,8 @@ import axios from "axios";
 import express from "express"
 import BlockfrostAPI from "./../blockfrost/api.js";
 import * as dotenv from "dotenv";
+import Schema from "./schema.js";
+import cors from "cors"
 const app = express();
 dotenv.config()
 
@@ -25,10 +27,13 @@ function Adlace(options={
 Adlace.prototype.getVersion = function (){ return packageJson.version };
 Adlace.prototype.runServer = async function (){
     let port = this.options.port;
+    let schema = new Schema();
     return new Promise((res, rej) => {
         try {
-            app.get('/', (req, res) => {
-                res.send('Hello World!')
+            app.use(cors())
+            app.get('/schema', (req, res) => {
+                let latestSchema = schema.getLatest();
+                res.json(latestSchema);
             })
             let server = app.listen(port, () => {
                 console.log(`The adlace API is listening on port ${port}`);
