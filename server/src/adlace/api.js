@@ -8,6 +8,7 @@ import BlockfrostAPI from "./../blockfrost/api.js";
 import * as dotenv from "dotenv";
 import Schema from "./schema.js";
 import cors from "cors"
+import querystring from "node:querystring"
 const app = express();
 dotenv.config()
 
@@ -49,7 +50,19 @@ Adlace.prototype.closeServer = async function (server){
 }
 Adlace.prototype.getMetadataByAddress = async function(address ,label, qs){
     let utxos = await this.blockfrost.getAddressUTXOs(address);
-    let metadataJSONByLabel = await this.blockfrost.getTransactionMetadataContentJSON(label, qs);
+    /*
+    * There could be a lot of labels, paginate them all.
+    * */
+    let metadataJSONByLabels = [];
+    let isPaginating = true;
+    let parsedQs = querystring.parse(qs.substring(1, qs.length));
+    let paginateCount = 0;
+    while(isPaginating){
+        paginateCount = paginateCount + 1;
+        let tempLabels = await this.blockfrost.getTransactionMetadataContentJSON(label, qs);
+        metadataJSONByLabels.concat(tempLabels.data);
+        isPaginating = tempLabels.data.length === parseInt(parsedQs.count);
+    }
 
     let matches = [];
     utxos.data.forEach(utxo => {
