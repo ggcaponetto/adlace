@@ -13,4 +13,10 @@ API.prototype.getSchema = async function () {
 API.prototype.getOptions = function () {
     return this.options;
 }
+API.prototype.getMetadata = function (qs) {
+    return axios({
+        method: "get",
+        url: `${this.options.baseUrl}/metadata${qs}`
+    });
+}
 export default API;

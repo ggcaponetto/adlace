@@ -52,7 +52,7 @@ describe('Server', function () {
             let matches = await api.getMetadataByAddress(
                 "addr1qx5hcvf9fhurwcmpp49ktppgy2eyeydd56mr05caa6xmfa7j96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsuu8g2m",
                 "55555",
-                `?count=10&page=1&order=desc`
+                `?count=5&page=1&order=desc`
             )
             chai.expect(matches.length).to.be.gt(0);
         });

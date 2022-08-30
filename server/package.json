@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "cross-env PORT=3001 node src/index.js",
+    "start": "cross-env node src/index.js",
     "docker-build-production": "docker build --no-cache -f Dockerfile -t adlace-server:latest --build-arg build_env=production .",
     "docker-tag-production": "docker tag adlace-server:latest ggcaponetto/adlace-server:latest",
     "docker-push-production": "docker image push ggcaponetto/adlace-server:latest",

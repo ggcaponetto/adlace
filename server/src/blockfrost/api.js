@@ -4,6 +4,7 @@ import {fileURLToPath} from 'url';
 import winston from "winston";
 import axios from "axios";
 import * as dotenv from "dotenv";
+
 dotenv.config()
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,14 +21,17 @@ const mochaLogger = winston.createLogger({
     ]
 });
 
-function Blockfrost(options={
+function Blockfrost(options = {
     baseUrl: undefined,
-    project_id:  undefined
-}){
+    project_id: undefined
+}) {
     this.options = options;
 }
-Blockfrost.prototype.getVersion = function (){packageJson.version};
-Blockfrost.prototype.getAddress = async function (address){
+
+Blockfrost.prototype.getVersion = function () {
+    packageJson.version
+};
+Blockfrost.prototype.getAddress = async function (address) {
     return axios({
         method: "get",
         headers: {
@@ -37,7 +41,7 @@ Blockfrost.prototype.getAddress = async function (address){
         url: `${this.options.baseUrl}/api/v0/addresses/${address}`
     })
 };
-Blockfrost.prototype.getAddressUTXOs = async function (address){
+Blockfrost.prototype.getAddressUTXOs = async function (address) {
     return axios({
         method: "get",
         headers: {
@@ -47,7 +51,7 @@ Blockfrost.prototype.getAddressUTXOs = async function (address){
         url: `${this.options.baseUrl}/api/v0/addresses/${address}/utxos`
     })
 };
-Blockfrost.prototype.getTransactionMetadataLabels = async function (qs){
+Blockfrost.prototype.getTransactionMetadataLabels = async function (qs) {
     return axios({
         method: "get",
         headers: {
@@ -57,8 +61,8 @@ Blockfrost.prototype.getTransactionMetadataLabels = async function (qs){
         url: `${this.options.baseUrl}/api/v0/metadata/txs/labels${qs}`
     })
 };
-Blockfrost.prototype.getTransactionMetadataContentJSON = async function (label, qs){
-    return axios({
+Blockfrost.prototype.getTransactionMetadataContentJSON = async function (label, qs) {
+    return await axios({
         method: "get",
         headers: {
             "Content-Type": "application/json",
@@ -66,5 +70,10 @@ Blockfrost.prototype.getTransactionMetadataContentJSON = async function (label, 
         },
         url: `${this.options.baseUrl}/api/v0/metadata/txs/labels/${label}${qs}`
     })
+        .then(res => {
+            return res;
+        }).catch(e => {
+            console.error(e);
+        })
 };
 export default Blockfrost;

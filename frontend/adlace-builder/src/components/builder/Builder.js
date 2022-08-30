@@ -24,8 +24,10 @@ function Builder() {
     const update = async () => {
         let schemaResponse = await api.getSchema();
         let options = api.getOptions();
+        let address = "addr1qx5hcvf9fhurwcmpp49ktppgy2eyeydd56mr05caa6xmfa7j96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsuu8g2m";
+        let metadata = await api.getMetadata(`?count=5&page=1&order=desc&address=${address}&label=55555`)
         setData({
-            schema: schemaResponse.data, options
+            schema: schemaResponse.data, options, metadata
         })
     }
 
@@ -43,7 +45,7 @@ function Builder() {
                 env: {process.env.REACT_APP_API_BASEURL}
             </div>
             <div>
-                data: {JSON.stringify(data)}
+                data: {JSON.stringify(data?.metadata)}
             </div>
             <Button variant="contained" onClick={async ()=>{await update()}}>Get Data</Button>
         </div>
