@@ -27,8 +27,8 @@ function App() {
           {/* The css baseline adds a black background to the body. We don't want that. */}
           <div className="App">
               <CssBaseline />
-              <Builder/>
               <Launcher/>
+              <Builder/>
           </div>
       </ThemeProvider>
   );
