@@ -19,4 +19,10 @@ API.prototype.getMetadata = function (qs) {
         url: `${this.options.baseUrl}/metadata${qs}`
     });
 }
+API.prototype.getLatestBlock = function () {
+    return axios({
+        method: "get",
+        url: `${this.options.baseUrl}/bf/blocks/latest`
+    });
+}
 export default API;

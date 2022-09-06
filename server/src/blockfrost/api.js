@@ -76,4 +76,19 @@ Blockfrost.prototype.getTransactionMetadataContentJSON = async function (label, 
             console.error(e);
         })
 };
+Blockfrost.prototype.getLatestBlock = async function () {
+    return await axios({
+        method: "get",
+        headers: {
+            "Content-Type": "application/json",
+            "project_id": this.options.project_id
+        },
+        url: `${this.options.baseUrl}/api/v0/blocks/latest`
+    })
+        .then(res => {
+            return res;
+        }).catch(e => {
+            console.error(e);
+        })
+};
 export default Blockfrost;

@@ -46,6 +46,10 @@ Adlace.prototype.runServer = async function (){
                 );
                 res.json(metadata);
             })
+            app.get('/bf/blocks/latest', async (req, res) => {
+                let response = await context.blockfrost.getLatestBlock();
+                res.json(response.data);
+            })
             let server = app.listen(port, () => {
                 console.log(`The adlace API is listening on port ${port}`);
                 res(server);
