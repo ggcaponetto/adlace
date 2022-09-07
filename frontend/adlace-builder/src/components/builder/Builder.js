@@ -60,11 +60,12 @@ import {
 import * as CSL from "@emurgo/cardano-serialization-lib-asmjs";
 import BufferLib from "buffer/index";
 import axios from "axios";
+
 const Buffer = BufferLib.Buffer;
 
 
 const script = document.currentScript;
-if(process.env.NODE_ENV === "production"){
+if (process.env.NODE_ENV === "production") {
     ll.setLevel(ll.levels.WARN);
 } else {
     ll.setLevel(ll.levels.DEBUG);
@@ -73,7 +74,7 @@ const api = new API({
     baseUrl: process.env.REACT_APP_API_BASEURL
 })
 
-function AdSubmitter(props){
+function AdSubmitter(props) {
     const [wallets, setWallets] = useState([]);
     const [pollCount, setPollCount] = useState(0);
     const [protocolParams, setProtocolParams] = useState({
@@ -92,7 +93,7 @@ function AdSubmitter(props){
     })
     const pollWallets = (options) => {
         const wallets = [];
-        for(const key in window.cardano) {
+        for (const key in window.cardano) {
             if (window.cardano[key].enable && wallets.indexOf(key) === -1) {
                 wallets.push(key);
             }
@@ -101,7 +102,7 @@ function AdSubmitter(props){
         if (wallets.length === 0 && options.count < options.maxCount) {
             setTimeout(() => {
                 setPollCount((p) => {
-                    pollWallets( {
+                    pollWallets({
                         ...options,
                         count: p + 1,
                     });
@@ -114,7 +115,7 @@ function AdSubmitter(props){
     const enable = async (walletName) => {
         try {
             return await window.cardano[walletName].enable();
-        } catch(err) {
+        } catch (err) {
             console.log(err);
             return Promise.reject(err.message)
         }
@@ -152,7 +153,7 @@ function AdSubmitter(props){
                     // console.log(`${N} Multiassets in the UTXO`)
 
 
-                    for (let i = 0; i < N; i++){
+                    for (let i = 0; i < N; i++) {
                         const policyId = keys.get(i);
                         const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
                         // console.log(`policyId: ${policyIdHex}`)
@@ -163,8 +164,8 @@ function AdSubmitter(props){
 
                         for (let j = 0; j < K; j++) {
                             const assetName = assetNames.get(j);
-                            const assetNameString = Buffer.from(assetName.name(),"utf8").toString();
-                            const assetNameHex = Buffer.from(assetName.name(),"utf8").toString("hex")
+                            const assetNameString = Buffer.from(assetName.name(), "utf8").toString();
+                            const assetNameHex = Buffer.from(assetName.name(), "utf8").toString("hex")
                             const multiassetAmt = multiasset.get_asset(policyId, assetName)
                             multiAssetStr += `+ ${multiassetAmt.to_str()} + ${policyIdHex}.${assetNameHex} (${assetNameString})`
                             // console.log(assetNameString)
@@ -227,7 +228,6 @@ function AdSubmitter(props){
 
         const auxiliaryData = AuxiliaryData.new();
         auxiliaryData.set_metadata(generalTransactionMetadata);
-
         txBuilder.set_auxiliary_data(auxiliaryData);
 
 
@@ -238,27 +238,35 @@ function AdSubmitter(props){
         // calculate the min fee required and send any change to an address (last thing to do)
         txBuilder.add_change_if_needed(shelleyChangeAddress)
 
-        // once the transaction is ready, we build it to get the tx body without witnesses
-        const txBody = txBuilder.build();
-        const txHash = CSL.hash_transaction(txBody);
-        const witnesses = CSL.TransactionWitnessSet.new();
+        // Tx witness
+        const transactionWitnessSet = TransactionWitnessSet.new();
 
         const tx = Transaction.new(
-            txBody,
-            TransactionWitnessSet.from_bytes(witnesses.to_bytes()),
-            auxiliaryData
+            txBuilder.build(),
+            TransactionWitnessSet.new(),
+            txBuilder.get_auxiliary_data()
         )
-        let txVkeyWitnesses = await connection.signTx(Buffer.from(tx.to_bytes(), "utf8").toString("hex"), false);
 
-        txVkeyWitnesses = CSL.TransactionWitnessSet.from_bytes(Buffer.from(txVkeyWitnesses, "hex"));
+        const encodedTx = Buffer.from(tx.to_bytes()).toString("hex");
+        let txVkeyWitnesses = await connection.signTx(encodedTx, false);
+        txVkeyWitnesses = TransactionWitnessSet.from_bytes(Buffer.from(txVkeyWitnesses, "hex"));
 
+        transactionWitnessSet.set_vkeys(txVkeyWitnesses.vkeys());
+
+
+        // re-assemble signed transaction
         const signedTx = Transaction.new(
             tx.body(),
-            TransactionWitnessSet.from_bytes(txVkeyWitnesses.to_bytes()),
-            auxiliaryData
+            // TransactionWitnessSet.from_bytes(witnessSet.to_bytes()),
+            // TransactionWitnessSet.from_hex(Buffer.from(witnessSet.to_bytes()).toString("hex")),
+            transactionWitnessSet,
+            tx.auxiliary_data()
         );
 
-        const submittedTxHash = await connection.submitTx(Buffer.from(signedTx.to_bytes(), "utf8").toString("hex"));
+        // encode signed transaction
+        const encodedSignedTx = Buffer.from(signedTx.to_bytes()).toString("hex");
+
+        const submittedTxHash = await connection.submitTx(encodedSignedTx);
         console.log(submittedTxHash)
         return submittedTxHash;
     }
@@ -328,9 +336,12 @@ function Builder() {
             <div>
                 data: {JSON.stringify(data?.metadata)}
             </div>
-            <Button variant="contained" onClick={async ()=>{await update()}}>Get Data</Button>
-            <AdSubmitter />
+            <Button variant="contained" onClick={async () => {
+                await update()
+            }}>Get Data</Button>
+            <AdSubmitter/>
         </div>
     );
 }
+
 export default Builder;
