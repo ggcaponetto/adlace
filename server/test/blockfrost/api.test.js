@@ -79,5 +79,19 @@ describe('API', function () {
             chai.expect(res.data).to.be.a("array");
             chai.expect(res.status).to.equal(200);
         });
+        it('get transaction metadata json by label', async function () {
+            this.timeout(30000);
+            let blockfrostOptions = {
+                baseUrl: "https://cardano-mainnet.blockfrost.io",
+                project_id: process.env.BLOCKFROST_MAINNET
+            }
+            let api = new Blockfrost(blockfrostOptions);
+            /*
+            * gets the latest tx metadata with label 55555
+            * */
+            let res = await api.getTransactionMetadataContentJSON("5555", `?count=100&page=1&order=desc`);
+            chai.expect(res.data).to.be.a("array");
+            chai.expect(res.status).to.equal(200);
+        });
     });
 });
