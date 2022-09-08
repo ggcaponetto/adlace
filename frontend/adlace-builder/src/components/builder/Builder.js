@@ -221,14 +221,17 @@ function AdSubmitter(props) {
         */
         txBuilder.add_inputs_from(txUnspentOutputs, 0)
 
-        let key = BigNum.from_str("5555");
-        let value = TransactionMetadatum.new_text("sometext");
-        let generalTransactionMetadata = GeneralTransactionMetadata.new();
-        generalTransactionMetadata.insert(key, value);
+        let label = BigNum.from_str("5555");
+        let jsonValue = JSON.stringify({what: "if", a: 666});
 
-        const auxiliaryData = AuxiliaryData.new();
-        auxiliaryData.set_metadata(generalTransactionMetadata);
-        txBuilder.set_auxiliary_data(auxiliaryData);
+        // let value = TransactionMetadatum.new_text(jsonValue);
+        // let generalTransactionMetadata = GeneralTransactionMetadata.new();
+        // generalTransactionMetadata.insert(key, value);
+
+        // const auxiliaryData = AuxiliaryData.new();
+        // auxiliaryData.set_metadata(generalTransactionMetadata);
+        // txBuilder.set_auxiliary_data(auxiliaryData);
+        txBuilder.add_json_metadatum(label, jsonValue)
 
 
         let currentSlotResponse = await api.getLatestBlock();

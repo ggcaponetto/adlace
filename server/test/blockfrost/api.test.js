@@ -89,7 +89,7 @@ describe('API', function () {
             /*
             * gets the latest tx metadata with label 55555
             * */
-            let res = await api.getTransactionMetadataContentJSON("5555", `?count=100&page=1&order=desc`);
+            let res = await api.getTransactionMetadataContentJSON("5555", `?count=10000&page=1&order=desc`);
             chai.expect(res.data).to.be.a("array");
             chai.expect(res.status).to.equal(200);
         });
