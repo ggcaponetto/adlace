@@ -55,7 +55,8 @@ import {
     TransactionMetadatumLabels,
     TransactionMetadatum,
     GeneralTransactionMetadata,
-    AuxiliaryData
+    AuxiliaryData,
+    NativeScripts
 } from "@emurgo/cardano-serialization-lib-asmjs"
 import * as CSL from "@emurgo/cardano-serialization-lib-asmjs";
 import BufferLib from "buffer/index";
@@ -63,6 +64,18 @@ import axios from "axios";
 
 const Buffer = BufferLib.Buffer;
 
+const Bech32Prefix = Object.freeze({
+    ADDRESS: 'addr',
+    PAYMENT_KEY_HASH: 'addr_vkh',
+});
+
+export function bytesToHex(bytes) {
+    return Buffer.from(bytes).toString('hex');
+}
+
+export function hexToBytes(hex) {
+    return Buffer.from(hex, 'hex');
+}
 
 const script = document.currentScript;
 if (process.env.NODE_ENV === "production") {
@@ -202,12 +215,43 @@ function AdSubmitter(props) {
         const shelleyOutputAddress = Address.from_bech32(outputAddress);
         const shelleyChangeAddress = Address.from_bech32(changeAddress);
 
+        const keyHash = CSL.BaseAddress.from_address(CSL.Address.from_bech32(changeAddress))
+            .payment_cred()
+            .to_keyhash();
+
+        const keyHashBech = keyHash.to_bech32(Bech32Prefix.PAYMENT_KEY_HASH);
+
         txBuilder.add_output(
             TransactionOutput.new(
                 shelleyOutputAddress,
                 Value.new(BigNum.from_str(amountLovelace.toString()))
             ),
         );
+
+        const scripts = CSL.NativeScripts.new();
+        scripts.add(CSL.NativeScript.new_script_pubkey(CSL.ScriptPubkey.new(keyHash)));
+        scripts.add(CSL.NativeScript.new_timelock_start(CSL.TimelockStart.new(42)));
+
+        const mintScript = CSL.NativeScript.new_script_all(CSL.ScriptAll.new(scripts));
+        const mintScriptHex = bytesToHex(mintScript.to_bytes());
+
+        function convertAssetNameToHEX(name) {
+            return bytesToHex(name);
+        }
+
+        const tokenAssetName = 'V42';
+        const nftAssetName = `V42/NFT#${Math.floor(Math.random() * 1000000000)}`;
+        const tokenAssetNameHex = convertAssetNameToHEX(tokenAssetName);
+        const nftAssetNameHex = convertAssetNameToHEX(nftAssetName);
+
+        const expectedPolicyId = bytesToHex(mintScript.hash().to_bytes());
+
+        console.log('[createTx] Including mint request: ', {
+            keyHashBech,
+            mintScriptHex,
+            assetNameHex: tokenAssetNameHex,
+            expectedPolicyId,
+        });
 
 
         // Find the available UTXOs in the wallet and
@@ -231,12 +275,18 @@ function AdSubmitter(props) {
         // const auxiliaryData = AuxiliaryData.new();
         // auxiliaryData.set_metadata(generalTransactionMetadata);
         // txBuilder.set_auxiliary_data(auxiliaryData);
-        txBuilder.add_json_metadatum(label, jsonValue)
-
+        txBuilder.add_json_metadatum(label, jsonValue);
 
         let currentSlotResponse = await api.getLatestBlock();
         let ttl = currentSlotResponse.data.slot + 7200;
         txBuilder.set_ttl(ttl); // now + 2h
+
+        txBuilder.add_mint_asset_and_output_min_required_coin(
+            mintScript,
+            CSL.AssetName.new(Buffer.from(tokenAssetName)),
+            CSL.Int.new_i32(1),
+            CSL.TransactionOutputBuilder.new().with_address(CSL.Address.from_bech32(changeAddress)).next()
+        );
 
         // calculate the min fee required and send any change to an address (last thing to do)
         txBuilder.add_change_if_needed(shelleyChangeAddress)
