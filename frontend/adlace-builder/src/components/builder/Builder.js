@@ -210,7 +210,7 @@ function AdSubmitter(props) {
         }
         return txOutputs;
     }
-    const buildSendADA = async (outputAddress, changeAddress, amountLovelace, connection) => {
+    const buildSendADA = async (outputAddress, changeAddress, nftReceiverAddress, amountLovelace, connection) => {
         const txBuilder = await initTransactionBuilder();
         const shelleyOutputAddress = Address.from_bech32(outputAddress);
         const shelleyChangeAddress = Address.from_bech32(changeAddress);
@@ -275,7 +275,22 @@ function AdSubmitter(props) {
         // const auxiliaryData = AuxiliaryData.new();
         // auxiliaryData.set_metadata(generalTransactionMetadata);
         // txBuilder.set_auxiliary_data(auxiliaryData);
-        txBuilder.add_json_metadatum(label, jsonValue);
+        // txBuilder.add_json_metadatum(label, jsonValue);
+
+        const metadata = {
+            [expectedPolicyId]: {
+                [nftAssetName]: {
+                    name: nftAssetName,
+                    description: `some description of ${nftAssetName}`,
+                    image: "ipfs://QmNhmDPJMgdsFRM9HyiQEJqrKkpsWFshqES8mPaiFRq9Zk",
+                    mediaType: "image/jpeg",
+                },
+            },
+        };
+        txBuilder.add_json_metadatum(
+            CSL.BigNum.from_str("721"),
+            JSON.stringify(metadata)
+        );
 
         let currentSlotResponse = await api.getLatestBlock();
         let ttl = currentSlotResponse.data.slot + 7200;
@@ -285,7 +300,7 @@ function AdSubmitter(props) {
             mintScript,
             CSL.AssetName.new(Buffer.from(tokenAssetName)),
             CSL.Int.new_i32(1),
-            CSL.TransactionOutputBuilder.new().with_address(CSL.Address.from_bech32(changeAddress)).next()
+            CSL.TransactionOutputBuilder.new().with_address(CSL.Address.from_bech32(nftReceiverAddress)).next()
         );
 
         // calculate the min fee required and send any change to an address (last thing to do)
@@ -346,7 +361,8 @@ function AdSubmitter(props) {
                 let sendResponse = await buildSendADA(
                     "addr1q83wrhyv2m6xhm66wzu0ej8gvg9663k6h4qhqktcw6fee7xj96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpser6yxs",
                     "addr1qx5hcvf9fhurwcmpp49ktppgy2eyeydd56mr05caa6xmfa7j96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsuu8g2m",
-                    3000000,
+                    "addr1q9lxxgf4se65sp20zljd3wsyv9tkmwzztsrl5742hyskmswj96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsev2rnu",
+                    5000000,
                     connectionResponse
                 ).catch(e => {
                     console.info("ada not sent: ", e);
