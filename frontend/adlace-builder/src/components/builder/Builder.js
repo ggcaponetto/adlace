@@ -265,17 +265,12 @@ function AdSubmitter(props) {
         */
         txBuilder.add_inputs_from(txUnspentOutputs, 0)
 
-        let label = BigNum.from_str("5555");
-        let jsonValue = JSON.stringify({what: "if", a: 666});
+        /*let label = BigNum.from_str("5555");
+        let jsonValue = JSON.stringify({what: "if", a: 666});*/
 
-        // let value = TransactionMetadatum.new_text(jsonValue);
-        // let generalTransactionMetadata = GeneralTransactionMetadata.new();
-        // generalTransactionMetadata.insert(key, value);
-
-        // const auxiliaryData = AuxiliaryData.new();
-        // auxiliaryData.set_metadata(generalTransactionMetadata);
-        // txBuilder.set_auxiliary_data(auxiliaryData);
-        // txBuilder.add_json_metadatum(label, jsonValue);
+        /*const auxiliaryData = AuxiliaryData.new();
+        txBuilder.set_auxiliary_data(auxiliaryData);
+        txBuilder.add_json_metadatum(label, jsonValue);*/
 
         const metadata = {
             [expectedPolicyId]: {
@@ -307,27 +302,37 @@ function AdSubmitter(props) {
         txBuilder.add_change_if_needed(shelleyChangeAddress)
 
         // Tx witness
-        const transactionWitnessSet = TransactionWitnessSet.new();
 
-        const tx = Transaction.new(
-            txBuilder.build(),
-            TransactionWitnessSet.new(),
-            txBuilder.get_auxiliary_data()
-        )
+        // once the transaction is ready, we build it to get the tx body without witnesses
+        const txBody = txBuilder.build();
+        const txHash = CSL.hash_transaction(txBody);
+        const witnesses = CSL.TransactionWitnessSet.new();
+        const witnessScripts = CSL.NativeScripts.new();
+
+        console.log(`TX_HASH: ${Buffer.from(txHash.to_bytes()).toString("hex")}`);
+
+        const unsignedTx = txBuilder.build_tx();
+
+        // create signed transaction
+        const tx = CSL.Transaction.new(
+            unsignedTx.body(),
+            witnesses,
+            unsignedTx.auxiliary_data()
+        );
 
         const encodedTx = Buffer.from(tx.to_bytes()).toString("hex");
-        let txVkeyWitnesses = await connection.signTx(encodedTx, false);
-        txVkeyWitnesses = TransactionWitnessSet.from_bytes(Buffer.from(txVkeyWitnesses, "hex"));
 
-        transactionWitnessSet.set_vkeys(txVkeyWitnesses.vkeys());
+        let txVkeyWitnesses = await connection.signTx(encodedTx);
+        txVkeyWitnesses = TransactionWitnessSet.from_bytes(Buffer.from(txVkeyWitnesses, "hex"));
+        witnesses.set_vkeys(txVkeyWitnesses.vkeys());
+        witnessScripts.add(mintScript);
+        witnesses.set_native_scripts(witnessScripts);
 
 
         // re-assemble signed transaction
         const signedTx = Transaction.new(
-            tx.body(),
-            // TransactionWitnessSet.from_bytes(witnessSet.to_bytes()),
-            // TransactionWitnessSet.from_hex(Buffer.from(witnessSet.to_bytes()).toString("hex")),
-            transactionWitnessSet,
+            txBody,
+            witnesses,
             tx.auxiliary_data()
         );
 
@@ -411,6 +416,79 @@ function Builder() {
             <AdSubmitter/>
         </div>
     );
+}
+
+export function NewBuilder() {
+    const [lines, setLines] = useState([
+        <h2>tx builder</h2>
+    ]);
+    const log = line => setLines(p => {
+        return [...p, line];
+    });
+    useEffect(() => {
+        log(<div>tx builder started...</div>)
+        let protocolParameters = {
+            linearFee: {
+                minFeeA: "44",
+                minFeeB: "155381",
+            },
+            minUtxo: "34482",
+            poolDeposit: "500000000",
+            keyDeposit: "2000000",
+            maxValSize: 5000,
+            maxTxSize: 16384,
+            priceMem: 0.0577,
+            priceStep: 0.0000721,
+            coinsPerUtxoWord: "34482",
+        };
+        log(<div>---------------- create the private key ----------------</div>)
+        const privateKey = CSL.PrivateKey.generate_ed25519();
+        log(<div>privateKey (to_bech32): {privateKey.to_bech32()}</div>)
+
+        log(<div>---------------- create the private key for the policy ----------------</div>)
+        let policyPrivateKey = CSL.PrivateKey.generate_ed25519()
+        log(<div>policyPrivateKey (to_bech32): {policyPrivateKey.to_bech32()}</div>)
+        log(<div>policyPrivateKey (to_public, to_bech32): {policyPrivateKey.to_public().to_bech32()}</div>)
+        log(<div>policyPrivateKey (to_hex): {policyPrivateKey.to_hex()}</div>)
+        log(<div>---------------- create the policy with the keys above ----------------</div>)
+
+        const policyPubKey = policyPrivateKey.to_public();
+        const policyAddress = CSL.BaseAddress.new(
+            CSL.NetworkInfo.mainnet().network_id(),
+            CSL.StakeCredential.from_keyhash(policyPubKey.hash()),
+            CSL.StakeCredential.from_keyhash(policyPubKey.hash())
+        ).to_address();
+        log(<div>policyAddress: {policyAddress.to_bech32()}</div>)
+
+        const address = CSL.BaseAddress.new(
+            CSL.NetworkInfo.testnet().network_id(),
+            CSL.StakeCredential.from_keyhash(privateKey.to_public().hash()),
+            CSL.StakeCredential.from_keyhash(privateKey.to_public().hash())
+        ).to_address();
+        log(<div>address: {address.to_bech32()}</div>)
+
+        const txBuilder = CSL.TransactionBuilder.new(
+            CSL.TransactionBuilderConfigBuilder.new()
+                .fee_algo(
+                    CSL.LinearFee.new(BigNum.from_str(protocolParameters.linearFee.minFeeA),
+                    CSL.BigNum.from_str(protocolParameters.linearFee.minFeeB))
+                )
+                .pool_deposit(CSL.BigNum.from_str(protocolParameters.poolDeposit))
+                .key_deposit(CSL.BigNum.from_str(protocolParameters.keyDeposit))
+                .coins_per_utxo_word(CSL.BigNum.from_str(protocolParameters.coinsPerUtxoWord))
+                .max_value_size(protocolParameters.maxValSize)
+                .max_tx_size(protocolParameters.maxTxSize)
+                .prefer_pure_change(true)
+                .build()
+        )
+        log(<div>txBuilder is ready...</div>)
+
+    }, [])
+    return (
+        <div>
+            {lines.map((l, i) => <div key={i}>{l}</div>)}
+        </div>
+    )
 }
 
 export default Builder;

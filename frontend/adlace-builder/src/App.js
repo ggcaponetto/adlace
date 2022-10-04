@@ -2,7 +2,7 @@ import './App.css';
 import qs from 'qs';
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import Builder from "./components/builder/Builder";
+import Builder, {NewBuilder} from "./components/builder/Builder";
 import Launcher from "./components/launcher/Launcher";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -27,8 +27,7 @@ function App() {
           {/* The css baseline adds a black background to the body. We don't want that. */}
           <div className="App">
               <CssBaseline />
-              <Launcher/>
-              <Builder/>
+              <NewBuilder/>
           </div>
       </ThemeProvider>
   );
