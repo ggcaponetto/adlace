@@ -82,9 +82,48 @@ const Home: NextPage = () => {
         if (!address) {
             throw new Error("no useful address found")
         }
-        const forgingScript = ForgeScript.withOneSignature(address);
+        // const forgingScript = ForgeScript.withOneSignature(address);
 
-        // const nativeForgingScript = ForgeScript.fromNativeScript(NativeScript.)
+        // rebuildingo of const forgingScript = ForgeScript.withOneSignature(address);
+        const toAddress = (bech32: string) => CardanoWasm.Address.from_bech32(bech32);
+        const toBaseAddress = (bech32: string) => CardanoWasm.BaseAddress.from_address(toAddress(bech32));
+        const toEnterpriseAddress = (bech32: string) => CardanoWasm.EnterpriseAddress.from_address(toAddress(bech32));
+        const toBytes = (hex: string) => {
+            if (hex.length % 2 === 0 && /^[0-9A-F]*$/i.test(hex))
+                return Buffer.from(hex, 'hex') as Uint8Array;
+
+            return Buffer.from(hex, 'utf-8');
+        };
+        const resolvePaymentKeyHash = (bech32: string) => {
+            try {
+                const paymentKeyHash = [
+                    toBaseAddress(bech32)?.payment_cred().to_keyhash(),
+                    toEnterpriseAddress(bech32)?.payment_cred().to_keyhash(),
+                ].find((kh) => kh !== undefined);
+
+                if (paymentKeyHash !== undefined)
+                    return paymentKeyHash.to_hex();
+
+                throw new Error(`Couldn't resolve payment key hash from address: ${bech32}`);
+            } catch (error) {
+                throw new Error(`An error occurred during resolvePaymentKeyHash: ${error}.`);
+            }
+        };
+        const deserializeEd25519KeyHash = (ed25519KeyHash: string) => CardanoWasm.Ed25519KeyHash
+            .from_bytes(toBytes(ed25519KeyHash));
+
+        const getForgeScript = (address: string) => {
+            const buildScriptPubkey = (keyHash: string) => {
+                const scriptPubkey = CardanoWasm.ScriptPubkey.new(
+                    deserializeEd25519KeyHash(keyHash),
+                );
+                let nativeScript = CardanoWasm.NativeScript.new_script_pubkey(scriptPubkey);
+                return nativeScript;
+            };
+            const keyHash = resolvePaymentKeyHash(address);
+            return buildScriptPubkey(keyHash).to_hex();
+        }
+        const nativeForgingScript = getForgeScript(address);
 
         const tx = new Transaction({initiator: wallet});
 
@@ -105,7 +144,7 @@ const Home: NextPage = () => {
             },
         };
         tx.mintAsset(
-            forgingScript,
+            nativeForgingScript,
             asset1,
         );
 
