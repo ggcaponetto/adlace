@@ -16,6 +16,53 @@ const Home: NextPage = () => {
 
     }, [])
 
+    async function signAndVerify(wallet: { signData: (arg0: any, arg1: any) => any; }, address: any, arbitraryMessage: any){
+        const signedMessage = await wallet.signData(address, arbitraryMessage);
+        console.error("signedMessage", signedMessage);
+
+        // @ts-ignore
+        const message = MessageSigning.COSESign1.from_bytes(Buffer.from(Buffer.from(signedMessage.signature, "hex"), "hex"));
+        const headermap = message.headers().protected().deserialized_headers();
+        // @ts-ignore
+
+        const coseKey = MessageSigning.COSEKey.from_bytes(Buffer.from(signedMessage.key, "hex"));
+
+        // @ts-ignore
+        const publicKey = CardanoWasm.PublicKey.from_bytes(coseKey.header(MessageSigning.Label.new_int(MessageSigning.Int.new_negative(MessageSigning.BigNum.from_str("2")))).as_bytes());
+
+        // const edSig = CardanoWasm.Ed25519Signature.from_bytes(Buffer.from(signedMessage.signature, "hex"));
+
+        const data = message.signed_data().to_bytes();
+        const body_from_token = Buffer.from(data).toString("utf-8");
+
+        const ed25519Sig = CardanoWasm.Ed25519Signature.from_bytes(
+            message.signature()
+        );
+
+        console.error("coseKey, publicKey", {
+            coseKey,
+            publicKey,
+            message,
+            data,
+            ed25519Sig,
+            body_from_token
+        });
+
+        if (!publicKey.verify(data, ed25519Sig)) {
+            throw new Error(
+                `Message integrity check failed (has the message been tampered with?)`
+            );
+        }
+
+        const parsed_body = parseAsHeaders(body_from_token);
+
+        // @ts-ignore
+        if (parsed_body["expire-date"] && new Date(parsed_body["expire-date"]) < new Date()) {
+            throw new Error("Token expired");
+        }
+        alert("message verified!")
+    }
+
     async function onMint() {
         console.log("minting started")
         // connect to a wallet
@@ -61,59 +108,8 @@ const Home: NextPage = () => {
             forgingScript,
             asset1,
         );
-        const arbitraryMessage = "hello zio";
-        const signedMessage = await wallet.signData(address, arbitraryMessage);
-        console.error("signedMessage", signedMessage);
 
-
-        // @ts-ignore
-        const message = MessageSigning.COSESign1.from_bytes(Buffer.from(Buffer.from(signedMessage.signature, "hex"), "hex"));
-        const headermap = message.headers().protected().deserialized_headers();
-        // @ts-ignore
-
-        const coseKey = MessageSigning.COSEKey.from_bytes(Buffer.from(signedMessage.key, "hex"));
-
-        // @ts-ignore
-        const publicKey = CardanoWasm.PublicKey.from_bytes(coseKey.header(MessageSigning.Label.new_int(MessageSigning.Int.new_negative(MessageSigning.BigNum.from_str("2")))).as_bytes());
-
-        // const edSig = CardanoWasm.Ed25519Signature.from_bytes(Buffer.from(signedMessage.signature, "hex"));
-
-        const data = message.signed_data().to_bytes();
-        const body_from_token = Buffer.from(data).toString("utf-8");
-
-        const ed25519Sig = CardanoWasm.Ed25519Signature.from_bytes(
-            message.signature()
-        );
-
-        console.error("coseKey, publicKey", {
-            coseKey,
-            publicKey,
-            message,
-            data,
-            ed25519Sig,
-            body_from_token
-        });
-
-        if (!publicKey.verify(data, ed25519Sig)) {
-            throw new Error(
-                `Message integrity check failed (has the message been tampered with?)`
-            );
-        }
-
-        const parsed_body = parseAsHeaders(body_from_token);
-
-        // @ts-ignore
-        if (parsed_body["expire-date"] && new Date(parsed_body["expire-date"]) < new Date()) {
-            throw new Error("Token expired");
-        }
-        alert("message verified!")
-
-        // console.error("publicKey", publicKey);
-
-
-        // let key_pub = CardanoWasm.Bip32PublicKey.from_bech32(publicKeys.key_pub_bech32);
-
-        /*const unsignedTx = await tx.build();
+        const unsignedTx = await tx.build();
         const signedTx = await wallet.signTx(unsignedTx).catch(e => {
             console.error("minting error", e)
         });
@@ -122,7 +118,7 @@ const Home: NextPage = () => {
                 console.error("minting error", e)
             });
             console.log("minting done", txHash)
-        }*/
+        }
     }
 
     return (
