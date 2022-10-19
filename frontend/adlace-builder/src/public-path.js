@@ -8,7 +8,7 @@ if(process && process.env){
     const script = document.currentScript;
     const url = new URL(script.src);
     // eslint-disable-next-line no-console
-    console.log('External React App (index.js): the current script is on', { url });
+    console.log('External React App (index.ts): the current script is on', { url });
     const ASSET_PATH = process.env.ASSET_PATH || `${url.origin}${url.pathname.replace('main.bundle.js', '')}`;
     // eslint-disable-next-line no-undef,camelcase
     __webpack_public_path__ = ASSET_PATH;
