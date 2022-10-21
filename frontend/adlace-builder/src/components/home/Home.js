@@ -120,9 +120,9 @@ export default function Home(props) {
                     let randomColor = Math.floor(Math.random() * 16777215).toString(16);
                     const style = {
                         minWidth: `${10}px`,
-                        width: `${Math.floor(topContainer.offsetWidth / width)}px`,
+                        width: `${(topContainer.clientWidth / width)}px`,
                         minHeight: `${10}px`,
-                        height: `${Math.floor(topContainer.offsetWidth / width)}px`,
+                        height: `${(topContainer.clientWidth / width)}px`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",

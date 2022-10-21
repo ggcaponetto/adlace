@@ -1,8 +1,9 @@
 html,
 body,
+.App,
 #adlace-container {
-    width: 100%;
+    width: calc(100vw - 17px);;
     height: 100%;
-    margin: 0;
-    padding: 0;
+    margin: 0px;
+    padding: 0px;
 }
