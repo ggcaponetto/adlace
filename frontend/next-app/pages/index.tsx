@@ -4,16 +4,19 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import {useEffect} from "react";
 import {Button} from "@mui/material";
-import {BrowserWallet, ForgeScript, Transaction} from "@martifylabs/mesh";
+import {BlockfrostProvider, BrowserWallet, ForgeScript, Transaction} from "@martifylabs/mesh";
 import {NativeScript} from "@emurgo/cardano-serialization-lib-nodejs";
 import * as CardanoWasm from "@emurgo/cardano-serialization-lib-browser"
 import * as MessageSigning from "@emurgo/cardano-message-signing-browser"
 import parseAsHeaders from "parse-headers";
+import { resolveSlotNo } from '@martifylabs/mesh';
 
 
 const Home: NextPage = () => {
     useEffect(() => {
-
+        console.log("home loaded", {
+            env: process.env
+        });
     }, [])
 
     async function signAndVerify(wallet: { signData: (arg0: any, arg1: any) => any; }, address: any, arbitraryMessage: any){
@@ -64,7 +67,17 @@ const Home: NextPage = () => {
     }
 
     async function onMint() {
-        console.log("minting started")
+        console.log("minting started", {
+            env: process.env
+        });
+        // @ts-ignore
+        const blockfrostProvider = new BlockfrostProvider(process.env.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID);
+        let params = await blockfrostProvider.fetchProtocolParameters();
+        const slot = resolveSlotNo('preprod');
+
+        console.log("network params", params);
+
+
         // connect to a wallet
         const wallet = await BrowserWallet.enable('eternl');
 
@@ -118,6 +131,24 @@ const Home: NextPage = () => {
                     deserializeEd25519KeyHash(keyHash),
                 );
                 let nativeScript = CardanoWasm.NativeScript.new_script_pubkey(scriptPubkey);
+                // make the native script from scratch
+                let policyJSON = JSON.stringify({
+                    type: 'all',
+                    scripts:
+                        [
+                            {
+                                type: 'before',
+                                slot: slot + 60 * 5
+                            },
+                            {
+                                type: 'sig',
+                                keyHash: `${keyHash}`
+                            }
+                        ]
+                }, null, 4);
+                console.log("policy json", policyJSON);
+                // const nativeScript = CardanoWasm.NativeScript.from_json(policyJSON);
+
                 return nativeScript;
             };
             const keyHash = resolvePaymentKeyHash(address);
@@ -129,7 +160,7 @@ const Home: NextPage = () => {
 
         // define asset#1 metadata
         const assetMetadata1 = {
-            "name": "PORCOLADRO",
+            "name": "PORCOLADRO2",
             "image": "ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua",
             "mediaType": "image/jpg",
             "description": "This NFT is minted by Mesh (https://mesh.martify.io/)."

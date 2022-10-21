@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 // import i18n (needs to be bundled ;))
 import * as i18n from "./components/i18n";
-import NFTMint from "./components/nft-mint/NFTMint";
+import Home from "./components/home/Home";
 const script = document.currentScript;
 
 const darkTheme = createTheme({
@@ -24,9 +24,9 @@ function App() {
   return (
       <ThemeProvider theme={darkTheme}>
           {/* The css baseline adds a black background to the body. We don't want that. */}
-          <div className="App">
+          <div className="App" style={{width: "100%", height: "100%"}}>
               <CssBaseline />
-              <NFTMint/>
+              <Home/>
           </div>
       </ThemeProvider>
   );
