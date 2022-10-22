@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import anime from 'animejs/lib/anime.es.js';
 import axios from "axios";
 import {
@@ -6,6 +6,9 @@ import {
     RouterProvider,
     Route, useParams,
 } from "react-router-dom";
+import sanitizeHtml from 'sanitize-html';
+import {Box, Button, Menu, MenuItem, Modal, Typography} from "@mui/material";
+
 
 function Advertisement(props) {
     const states = {
@@ -42,8 +45,9 @@ function Advertisement(props) {
     )
 }
 
-function Schema(){
+function Schema() {
 }
+
 Schema.getSamples = () => {
     return {
         "1.0.0": [
@@ -53,10 +57,150 @@ Schema.getSamples = () => {
             },
             {
                 "coordinates": {x: 1, y: 0},
-                "alias": "something"
+                "alias": "something",
+                "html": "<div><h2>sometitle</h2><p>a pararagraph</p></div>"
             },
         ]
     }
+}
+Schema.sanitize = (dirtyInput) => {
+    const clean = sanitizeHtml(dirtyInput, {
+        allowedTags: [
+            "address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
+            "h5", "h6", "hgroup", "main", "nav", "section", "blockquote", "dd", "div",
+            "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre",
+            "ul", "a", "abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
+            "em", "i", "kbd", "mark", "q", "rb", "rp", "rt", "rtc", "ruby", "s", "samp",
+            "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr", "caption",
+            "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img"
+        ],
+        disallowedTagsMode: 'discard',
+        allowedAttributes: {
+            a: ['href', 'name', 'target'],
+            // We don't currently allow img itself by default, but
+            // these attributes would make sense if we did.
+            img: ['src', 'srcset', 'alt', 'title', 'width', 'height', 'loading']
+        },
+        // Lots of these won't come up by default because we don't allow them
+        selfClosing: ['img', 'br', 'hr', 'area', 'base', 'basefont', 'input', 'link', 'meta'],
+        // URL schemes we permit
+        allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'tel'],
+        allowedSchemesByTag: {},
+        allowedSchemesAppliedToAttributes: ['href', 'src', 'cite'],
+        allowProtocolRelative: true,
+        enforceHtmlBoundary: false
+    });
+    return clean;
+}
+
+function NewSpace(props) {
+    const [aceEditor, setAceEditor] = useState(null);
+    const [sanitized, setSanitized] = useState(null);
+
+    const onRefChange = useCallback(node => {
+        if (node === null) {
+            // DOM node referenced by ref has been unmounted
+        } else {
+            // DOM node referenced by ref has changed and exists
+            const editor = window.ace.edit("editor", {
+                mode: "ace/mode/html",
+                selectionStyle: "text"
+            });
+            editor.setTheme("ace/theme/twilight");
+            setAceEditor(editor);
+        }
+    }, []); // adjust deps
+    const style = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+    };
+
+    useEffect(() => {
+       // poll the editor and render a preview
+        function getSanitizedValue(){
+            const value = aceEditor.getValue();
+            const sanitized = Schema.sanitize(value);
+            setSanitized(sanitized);
+        }
+        if(aceEditor){
+            aceEditor.session.on("change", getSanitizedValue);
+            getSanitizedValue();
+        }
+        return () => {
+            if(aceEditor){
+                aceEditor.session.off("change", getSanitizedValue)
+            }
+        }
+    }, [aceEditor]);
+    return (
+        <Modal
+            open={true}
+            onClose={props.onClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+        >
+            <Box sx={style}>
+                <div>
+                    <h4>Raw HTML subset</h4>
+                    <div id={"editor"} ref={onRefChange} style={{width: "100%", minHeight: "200px"}}>
+                        {`<div>porc</div>`}
+                    </div>
+                </div>
+                <div>
+                    <h4>Preview</h4>
+                    <div style={{width: "100%", minHeight: "200px"}}>
+                        <div dangerouslySetInnerHTML={{__html: sanitized}}/>
+                    </div>
+                </div>
+            </Box>
+        </Modal>
+    )
+}
+
+function MyMenu(props) {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [modal, setModal] = useState(null);
+
+    const handleClose = () => {
+        setIsOpen(false)
+    };
+
+    const onNewSpace = () => {
+        const newModal = (
+            <NewSpace onClose={() => {
+                setModal(null);
+            }}/>
+        )
+        setModal(newModal);
+    }
+    return (
+        <div ref={c => setAnchorEl(c)}>
+            <Button onClick={() => {
+                setIsOpen(!isOpen)
+            }}>Menu</Button>
+            <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={isOpen}
+                onClose={handleClose}
+                MenuListProps={{
+                    'aria-labelledby': 'basic-button',
+                }}
+            >
+                <MenuItem onClick={onNewSpace}>New Space</MenuItem>
+                <MenuItem onClick={handleClose}>About</MenuItem>
+            </Menu>
+            {modal}
+        </div>
+    )
 }
 
 export default function Home(props) {
@@ -67,7 +211,7 @@ export default function Home(props) {
     let params = useParams();
 
     useEffect(() => {
-        async function getTransactions(){
+        async function getTransactions() {
             console.log("fetching transactions...")
             let transactionsResponse = await axios({
                 method: 'post',
@@ -95,13 +239,16 @@ export default function Home(props) {
             }`,
                     variables: {}
                 })
-            }).catch(e => { console.error(e) });
+            }).catch(e => {
+                console.error(e)
+            });
             console.log("got transactions", transactionsResponse);
             // setTransactions(transactionsResponse.data.data.transactions);
             // moch the transactions
             setTransactions(Schema.getSamples()["1.0.0"]);
             setHeight(Math.floor(transactionsResponse.data.data.transactions.length / width));
         }
+
         getTransactions();
     }, [])
 
@@ -163,20 +310,30 @@ export default function Home(props) {
         window.addEventListener("resize", setGrid);
     }, [height])
 
-    function displaySpace(){
+    function displaySpace() {
         let transaction = transactions.filter(transaction => transaction.alias === params.alias)[0];
-        if(transaction){
+        if (transaction) {
             return (
                 <div>
-                    {JSON.stringify({
-                        transaction, params
-                    })}
+                    <div>
+                        {JSON.stringify({
+                            transaction, params
+                        })}
+                    </div>
+                    <div dangerouslySetInnerHTML={{__html: Schema.sanitize(transaction.html)}}/>
+                </div>
+            )
+        } else if (params.alias) {
+            return (
+                <div>
+                    404
                 </div>
             )
         } else {
             return containers || "No Spaces"
         }
     }
+
     return (
         <div
             id={"top-container"}
@@ -188,6 +345,9 @@ export default function Home(props) {
                 alignItems: "center",
                 justifyContent: "center"
             }}>
+            <div style={{width: "100%"}}>
+                <MyMenu/>
+            </div>
             {displaySpace()}
         </div>
     )
