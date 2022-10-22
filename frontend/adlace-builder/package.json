@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^7.0.0-alpha.8",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@emurgo/cardano-serialization-lib-asmjs": "^11.0.5",
+    "@emurgo/cardano-serialization-lib-browser": "^11.1.0",
     "@martifylabs/mesh": "^1.1.0-beta.6",
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.10.1",
@@ -36,8 +38,8 @@
     "webpack": "^5.74.0"
   },
   "scripts": {
-    "start": "react-app-rewired --max_old_space_size=8186 start",
-    "build": "react-app-rewired --max_old_space_size=8186 build",
+    "start": "craco --max_old_space_size=8186 start",
+    "build": "craco --max_old_space_size=8186 build",
     "build-tsc": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsc",
     "eslint": "npx eslint src --fix",
     "clean-dist": "rimraf ./dist/*",
@@ -45,8 +47,8 @@
     "serve-hostsite": "http-server ./../hostsite -p 3002",
     "webpack-prod": "npm run clean-dist && npx cross-env NODE_ENV=production BABEL_ENV=production node ./node_modules/webpack/bin/webpack.js --config webpack.config.prod.js",
     "webpack-dev": "npm run clean-dist && npx cross-env NODE_ENV=development BABEL_ENV=development node ./node_modules/webpack/bin/webpack.js --config webpack.config.prod.js",
-    "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject",
+    "test": "craco test",
+    "eject": "craco eject",
     "postinstall": "patch-package"
   },
   "eslintConfig": {
@@ -72,6 +74,7 @@
     "@babel/core": "^7.18.10",
     "@babel/preset-env": "^7.18.10",
     "@babel/preset-react": "^7.18.6",
+    "@wasm-tool/wasm-pack-plugin": "^1.6.0",
     "assert": "^2.0.0",
     "buffer": "^6.0.3",
     "cross-env": "^7.0.3",
@@ -89,6 +92,7 @@
     "svg-inline-loader": "^0.8.2",
     "typescript": "^4.8.4",
     "url": "^0.11.0",
+    "wasm-loader": "^1.3.0",
     "webpack-cli": "^4.10.0"
   }
 }

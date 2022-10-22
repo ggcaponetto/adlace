@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import sanitizeHtml from 'sanitize-html';
 import {Box, Button, Menu, MenuItem, Modal, Typography} from "@mui/material";
-
+let csl = null;
 
 function Advertisement(props) {
     const states = {
@@ -91,6 +91,26 @@ Schema.sanitize = (dirtyInput) => {
         enforceHtmlBoundary: false
     });
     return clean;
+}
+
+function TXSubmitter(props){
+
+    useEffect(() => {
+        async function initCSL(){
+            csl = csl || await import("@emurgo/cardano-serialization-lib-browser");
+            console.log("The cardano serialization library is ready", csl);
+        }
+        initCSL();
+    }, [])
+
+    const onClick = () => {
+
+    };
+    return (
+        <div>
+            <Button onClick={onClick}>Submit</Button>
+        </div>
+    )
 }
 
 function NewSpace(props) {
