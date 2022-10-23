@@ -9,6 +9,8 @@ import {
 import sanitizeHtml from 'sanitize-html';
 import {Box, Button, Menu, MenuItem, Modal, Typography} from "@mui/material";
 import {Buffer} from 'buffer';
+import Dandelion from "../api/dandelion";
+let dandelionApi = new Dandelion();
 let csl = null;
 
 function Advertisement(props) {
@@ -127,10 +129,10 @@ function TXSubmitter(props){
         txBuilder.add_input(
             csl.Address.from_bech32(senderAddress),
             csl.TransactionInput.new(
-                csl.TransactionHash.from_bytes(Buffer.from("03ac12cba628f24bbf6de1ce55f0d873b1d06a9552dd9d534967677601beae4b", "hex")), // tx hash
-                0, // index
+                csl.TransactionHash.from_bytes(Buffer.from("38a9e41f3d31baa8bdaee4c301c2f3c98c63a2b12e281a4339b014550be2f166", "hex")), // tx hash
+                1, // index
             ),
-            csl.Value.new(csl.BigNum.from_str('2000000'))
+            csl.Value.new(csl.BigNum.from_str('15423557'))
         );
         const outputAddress = "addr1q9lxxgf4se65sp20zljd3wsyv9tkmwzztsrl5742hyskmswj96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsev2rnu";
 
@@ -142,22 +144,35 @@ function TXSubmitter(props){
             ),
         );
 
-        // set the time to live - the absolute slot value before the tx becomes invalid
-        // txBuilder.set_ttl(410021);
+        let latestSlotResponse = await dandelionApi.getLatestSlots();
+        console.log("the latest slot number is:", {latestSlotResponse});
+        let latestSlotNumber = latestSlotResponse.data.data.blocks[0].slotNo;
+        txBuilder.set_ttl(latestSlotNumber + 60 * 5 );
 
-        // calculate the min fee required and send any change to an address
+        // ad metadata
+        const metadataObject = {
+            cco: "zio",
+            comment: "hey macarena",
+        };
+        txBuilder.add_json_metadatum(csl.BigNum.from_str("55555"), JSON.stringify(metadataObject));
+
+        // calculate the min fee required and send any change to an address (last step)
         txBuilder.add_change_if_needed(
             csl.Address.from_bech32(outputAddress),
         );
+
         // once the transaction is ready, we build it to get the tx body without witnesses
         const txBody = txBuilder.build();
         const txHash = csl.hash_transaction(txBody);
         const transactionWitnessSet  = csl.TransactionWitnessSet.new();
         console.log("the tx hash is:", {txHash, txBody});
 
+
+        const unsignedTx = txBuilder.build_tx();
         const tx = csl.Transaction.new(
             txBody,
-            csl.TransactionWitnessSet.from_bytes(transactionWitnessSet.to_bytes())
+            csl.TransactionWitnessSet.from_bytes(transactionWitnessSet.to_bytes()),
+            unsignedTx.auxiliary_data()
         )
 
         let txVkeyWitnesses = await wallet.signTx(
@@ -175,9 +190,17 @@ function TXSubmitter(props){
 
         const signedTx = csl.Transaction.new(
             tx.body(),
-            transactionWitnessSet
+            transactionWitnessSet,
+            unsignedTx.auxiliary_data()
         );
         console.log("the signed tx is:", {signedTx});
+
+        const submittedTxHash = await wallet.submitTx(
+            Buffer.from(
+                signedTx.to_bytes(), "utf8"
+            ).toString("hex")
+        );
+        console.log("the signed tx has been submitted:", {submittedTxHash});
     };
     return (
         <div>
@@ -309,35 +332,7 @@ export default function Home(props) {
     useEffect(() => {
         async function getTransactions() {
             console.log("fetching transactions...")
-            let transactionsResponse = await axios({
-                method: 'post',
-                url: 'https://graphql-api.mainnet.dandelion.link',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify({
-                    query: `{ 
-                transactions(
-                    limit: 1000
-                    where: {metadata: {key: { _eq: "721"}}}
-                    order_by: {
-                        includedAt: desc
-                    }
-                ) {
-                     blockIndex
-                     includedAt
-                     metadata {
-                         key
-                         value
-                     }
-                     hash
-                }
-            }`,
-                    variables: {}
-                })
-            }).catch(e => {
-                console.error(e)
-            });
+            let transactionsResponse = await dandelionApi.getTransactions();
             console.log("got transactions", transactionsResponse);
             // setTransactions(transactionsResponse.data.data.transactions);
             // moch the transactions
