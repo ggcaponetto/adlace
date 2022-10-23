@@ -103,7 +103,11 @@ function TXSubmitter(props){
         initCSL();
     }, [])
 
-    const onClick = () => {
+    const onClick = async () => {
+        // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/create-react-app/#troubleshooting
+        // initialize the wallet
+        let wallet = await window.cardano["eternl"].enable();
+
         // instantiate the tx builder with the Cardano protocol parameters - these may change later on
         const linearFee = csl.LinearFee.new(
             csl.BigNum.from_str('44'),
@@ -148,8 +152,32 @@ function TXSubmitter(props){
         // once the transaction is ready, we build it to get the tx body without witnesses
         const txBody = txBuilder.build();
         const txHash = csl.hash_transaction(txBody);
-        const witnesses = csl.TransactionWitnessSet.new();
-        console.log("the tx hash is:", {txHash, txBody})
+        const transactionWitnessSet  = csl.TransactionWitnessSet.new();
+        console.log("the tx hash is:", {txHash, txBody});
+
+        const tx = csl.Transaction.new(
+            txBody,
+            csl.TransactionWitnessSet.from_bytes(transactionWitnessSet.to_bytes())
+        )
+
+        let txVkeyWitnesses = await wallet.signTx(
+            Buffer.from(
+                tx.to_bytes(), "utf8"
+            ).toString("hex"),
+            true
+        );
+
+        txVkeyWitnesses = csl.TransactionWitnessSet.from_bytes(
+            Buffer.from(txVkeyWitnesses, "hex")
+        );
+
+        transactionWitnessSet.set_vkeys(txVkeyWitnesses.vkeys());
+
+        const signedTx = csl.Transaction.new(
+            tx.body(),
+            transactionWitnessSet
+        );
+        console.log("the signed tx is:", {signedTx});
     };
     return (
         <div>
