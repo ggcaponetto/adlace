@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import sanitizeHtml from 'sanitize-html';
 import {Box, Button, Menu, MenuItem, Modal, Typography} from "@mui/material";
+import {Buffer} from 'buffer';
 let csl = null;
 
 function Advertisement(props) {
@@ -94,7 +95,6 @@ Schema.sanitize = (dirtyInput) => {
 }
 
 function TXSubmitter(props){
-
     useEffect(() => {
         async function initCSL(){
             csl = csl || await import("@emurgo/cardano-serialization-lib-browser");
@@ -104,7 +104,52 @@ function TXSubmitter(props){
     }, [])
 
     const onClick = () => {
+        // instantiate the tx builder with the Cardano protocol parameters - these may change later on
+        const linearFee = csl.LinearFee.new(
+            csl.BigNum.from_str('44'),
+            csl.BigNum.from_str('155381')
+        );
+        const txBuilderCfg = csl.TransactionBuilderConfigBuilder.new()
+            .fee_algo(linearFee)
+            .pool_deposit(csl.BigNum.from_str('500000000'))
+            .key_deposit(csl.BigNum.from_str('2000000'))
+            .max_value_size(4000)
+            .max_tx_size(8000)
+            .coins_per_utxo_word(csl.BigNum.from_str('34482'))
+            .build();
+        const txBuilder = csl.TransactionBuilder.new(txBuilderCfg);
 
+        const senderAddress = "addr1q8he8j9umc6l5mr68twv5n3cpuwdur087ekeamyknk9l9fwj96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsy4e5mc";
+        txBuilder.add_input(
+            csl.Address.from_bech32(senderAddress),
+            csl.TransactionInput.new(
+                csl.TransactionHash.from_bytes(Buffer.from("03ac12cba628f24bbf6de1ce55f0d873b1d06a9552dd9d534967677601beae4b", "hex")), // tx hash
+                0, // index
+            ),
+            csl.Value.new(csl.BigNum.from_str('2000000'))
+        );
+        const outputAddress = "addr1q9lxxgf4se65sp20zljd3wsyv9tkmwzztsrl5742hyskmswj96jwfwh7s38c2leje8wwjm02dtzclrg3v2uxmxhemlpsev2rnu";
+
+        // add output to the tx
+        txBuilder.add_output(
+            csl.TransactionOutput.new(
+                csl.Address.from_bech32(outputAddress),
+                csl.Value.new(csl.BigNum.from_str('1400000'))
+            ),
+        );
+
+        // set the time to live - the absolute slot value before the tx becomes invalid
+        // txBuilder.set_ttl(410021);
+
+        // calculate the min fee required and send any change to an address
+        txBuilder.add_change_if_needed(
+            csl.Address.from_bech32(outputAddress),
+        );
+        // once the transaction is ready, we build it to get the tx body without witnesses
+        const txBody = txBuilder.build();
+        const txHash = csl.hash_transaction(txBody);
+        const witnesses = csl.TransactionWitnessSet.new();
+        console.log("the tx hash is:", {txHash, txBody})
     };
     return (
         <div>
@@ -178,6 +223,9 @@ function NewSpace(props) {
                     <div style={{width: "100%", minHeight: "200px"}}>
                         <div dangerouslySetInnerHTML={{__html: sanitized}}/>
                     </div>
+                </div>
+                <div>
+                    <TXSubmitter />
                 </div>
             </Box>
         </Modal>
