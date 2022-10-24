@@ -234,6 +234,14 @@ function TXSubmitter(props){
         const coseKey = messageSigning.COSEKey.from_bytes(Buffer.from(signedData.key, 'hex'));
         const keyHeaderBytes = coseKey.header(messageSigning.Label.new_int(messageSigning.Int.new_i32(-2))).as_bytes();
         console.log("Parsed COSE key and headers", {
+            messageSigning,
+            coseKey,
+            keyHeaderBytes
+        });
+
+        // const coseSign1 = messageSigning.COSESign1
+
+        console.log("Parsed pubKey", {
             coseKey,
             keyHeaderBytes
         });
