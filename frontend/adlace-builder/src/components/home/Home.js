@@ -10,9 +10,10 @@ import sanitizeHtml from 'sanitize-html';
 import {Box, Button, Menu, MenuItem, Modal, Typography} from "@mui/material";
 import {Buffer} from 'buffer';
 import Dandelion from "../api/dandelion";
+// import * as messageSigning from "../../lib/message-signing/pkg/cardano_message_signing.js"
 let dandelionApi = new Dandelion();
 let csl = null;
-
+let messageSigning = null;
 function Advertisement(props) {
     const states = {
         DISPLAY: "DISPLAY",
@@ -102,7 +103,12 @@ function TXSubmitter(props){
             csl = csl || await import("@emurgo/cardano-serialization-lib-browser");
             console.log("The cardano serialization library is ready", csl);
         }
+        async function initMessageSigning(){
+            messageSigning = messageSigning || await import("../../lib/message-signing/pkg/cardano_message_signing");
+            console.log("The cardano message signing library is ready", messageSigning);
+        }
         initCSL();
+        initMessageSigning();
     }, [])
 
     const onClick = async () => {
@@ -202,9 +208,40 @@ function TXSubmitter(props){
         );
         console.log("the signed tx has been submitted:", {submittedTxHash});
     };
+    const onSign = async () => {
+        let wallet = await window.cardano["eternl"].enable();
+        let usedAddresses = await wallet.getUsedAddresses();
+        let decodedUsedAddresses = usedAddresses.map(encodedAddress => csl.Address.from_bytes(Buffer.from(encodedAddress, "hex")).to_bech32());
+        console.log("Used addresses", {
+            decodedUsedAddresses, usedAddresses
+        });
+        const toHex = str => {
+            let hex = ''
+            for (let i = 0, l = str.length; i < l; i++) {
+                hex += str.charCodeAt(i).toString(16)
+            }
+            return hex
+        };
+        // let signedData = await wallet.signData(decodedUsedAddresses[0], toHex(JSON.stringify({"some": "data"})))
+        /*
+        sample: {"signature":"844fa20127676164647265737343ad0d01a166686173686564f44f7b22736f6d65223a2264617461227d584087c626eb8320b86ea2146afc845ebba12917ffb0b2b9e7eaed005d43b783a9d2de2c5d7fccc1a88ad6310d9adb50a8e3ae14ad8dd442877d5c413f6cb9b2a306","key":"a4010103272006215820b079c83b0bd317ff0bd7c7cf1e08859a70f8806c16e314373f922a8fe7739115"}
+        */
+        const signedData = JSON.parse("{\"signature\":\"844fa20127676164647265737343ad0d01a166686173686564f44f7b22736f6d65223a2264617461227d584087c626eb8320b86ea2146afc845ebba12917ffb0b2b9e7eaed005d43b783a9d2de2c5d7fccc1a88ad6310d9adb50a8e3ae14ad8dd442877d5c413f6cb9b2a306\",\"key\":\"a4010103272006215820b079c83b0bd317ff0bd7c7cf1e08859a70f8806c16e314373f922a8fe7739115\"}")
+        console.log("Signed data", {
+            signedData,
+            messageSigning
+        });
+        const coseKey = messageSigning.COSEKey.from_bytes(Buffer.from(signedData.key, 'hex'));
+        const keyHeaderBytes = coseKey.header(messageSigning.Label.new_int(messageSigning.Int.new_i32(-2))).as_bytes();
+        console.log("Parsed COSE key and headers", {
+            coseKey,
+            keyHeaderBytes
+        });
+    }
     return (
         <div>
             <Button onClick={onClick}>Submit</Button>
+            <Button onClick={onSign}>Sign Data</Button>
         </div>
     )
 }
@@ -266,7 +303,7 @@ function NewSpace(props) {
                 <div>
                     <h4>Raw HTML subset</h4>
                     <div id={"editor"} ref={onRefChange} style={{width: "100%", minHeight: "200px"}}>
-                        {`<div>porc</div>`}
+                        {`<div>test</div>`}
                     </div>
                 </div>
                 <div>
@@ -344,7 +381,7 @@ export default function Home(props) {
     }, [])
 
     useEffect(() => {
-        console.log("params", params)
+        console.log("params", params);
     }, [])
 
     useEffect(() => {
@@ -433,13 +470,12 @@ export default function Home(props) {
                 height: "100%",
                 display: "flex",
                 flexWrap: "wrap",
-                alignItems: "center",
                 justifyContent: "center"
             }}>
             <div style={{width: "100%"}}>
                 <MyMenu/>
             </div>
-            {displaySpace()}
+            {/*{displaySpace()}*/}
         </div>
     )
 }
